@@ -1,0 +1,371 @@
+/* Prevent unwanted horizontal scroll */
+body {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 5px;
+}
+
+/* Make listing cards responsive */
+.listings-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* responsive grid */
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Ensure cards don't overflow */
+.listing-card {
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-left: 20px;
+}
+
+
+.card {
+    /* Overrides the default Bootstrap border-radius for all cards */
+    border-radius: 25px; 
+    
+    /* Ensures child elements (like the image) respect the rounded corners */
+    overflow: hidden; 
+    
+    /* Optionally, you can ensure no border is visible if the shadow is enough */
+    border: none;
+}
+<style>
+  .navbar {
+    font-size: 0.95rem;
+  }
+  .navbar-brand {
+    font-size: 1.4rem;
+    letter-spacing: -0.5px;
+  }
+  .nav-link {
+    color: #333 !important;
+    transition: color 0.2s ease;
+  }
+  .nav-link:hover {
+    color: #ff385c !important; /* Airbnb red/pink */
+  }
+  .btn-danger {
+    background-color: #ff385c;
+    border: none;
+  }
+  .btn-danger:hover {
+    background-color: #e03150;
+  }
+  .navbar-nav {
+  margin-left: 9rem; /* push links slightly to the right of Wanderlust */
+   gap: 1.5rem;      /* spacing between links */
+}
+.content {
+  padding-top: 80px; /* Adjust to match navbar height */
+}
+
+/* Card base styles */
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 25px;
+  overflow: hidden;
+}
+
+/* Image transitions smoothly */
+.card-img-top {
+  transition: transform 0.5s ease;
+}
+
+/* Hover state: pop the card out */
+.card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+
+/* Hover state: zoom the image slightly more than the card */
+.card:hover .card-img-top {
+  transform: scale(1.1);
+}
+
+/* for new.ejs for add/new listing */
+
+  /* Custom CSS for Animations and Styling */
+  
+  .form-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .form-control, .form-select, .btn-primary {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .form-control:focus, .form-control:hover, .form-select:focus, .form-select:hover {
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(1px);
+    box-shadow: none !important;
+  }
+
+  .form-floating > label {
+    padding-left: 1rem;
+  }
+
+  /* Specific styling for the image options section */
+  .image-options-card {
+    border: 1px dashed #ccc;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+  }
+
+
+
+
+
+
+
+
+  /* For edit,ejs */
+  .form-container {
+    max-width: 600px; /* Limits the form width for better readability */
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #fff; /* White background for the card */
+    border-radius: 15px; /* Rounded corners */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    opacity: 0; /* Start hidden for pop-in animation */
+    transform: translateY(20px); /* Start slightly below its final position */
+    animation: fadeIn 0.6s ease-out forwards; /* Apply the animation */
+  }
+
+  /* Keyframe animation for the container */
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Input and Button Animation (Subtle Hover Effect) */
+  .form-control, .form-select, .btn-primary, .btn-outline-secondary {
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Lift and slight shadow on input hover */
+  .form-control:focus, .form-control:hover, .form-select:focus, .form-select:hover {
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.1); 
+    transform: translateY(-1px);
+  }
+
+  /* Button click effect */
+  .btn-primary:active, .btn-outline-secondary:active {
+    transform: translateY(1px);
+    box-shadow: none !important;
+  }
+
+  .form-floating > label {
+    padding-left: 1rem; /* Adjust padding for better look in floating label */
+  }
+
+  /* Specific styling for the image options section */
+  .image-options-card {
+    border: 1px dashed #ccc;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+  }
+
+
+
+
+
+  /* for heart icon on listing page in index.ejs  */
+  /* Custom style for the clickable heart icon container */
+  .favorite-toggle {
+    /* Container for the icon (the circle) */
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 10;
+    cursor: pointer;
+    
+    /* Circle Styling */
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    
+    /* Centering the icon inside the circle */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  
+  /* Icon inside the circle */
+  .favorite-icon {
+    font-size: 1.1rem;
+    color: #4a4a4a; /* Default dark grey outline color */
+    transition: color 0.2s ease;
+  }
+
+  /* Class applied when the item is marked as a favorite */
+  .favorite-toggle.is-favorite .favorite-icon {
+    color: #ff385c; /* Red color for favorited state */
+  }
+  
+  .favorite-toggle:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Existing styles for the card */
+  .card-img-top { height: 200px; object-fit: cover; }
+  .card { border-radius: 25px; overflow: hidden; }
+
+/* show.ejs */
+<style>
+  /* Global Styles */
+  body { 
+    background: #ffffff; /* Pure white background */
+    font-family: 'Inter', sans-serif; 
+    padding-top: 20px;
+  }
+  
+  /* Main Container - Tighter and Centered */
+  .listing-container {
+    max-width: 900px; /* Constrain width for better focus */
+    margin: 40px auto;
+    padding: 0 15px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Image Styling - Focus on quality, not size */
+  .single-listing-image {
+    width: 100%;
+    height: 350px; /* Balanced height for desktop view */
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Section Separator */
+  .section { 
+    padding: 2.5rem 0; 
+    border-bottom: 1px solid #eeeeee; 
+  }
+  .section:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  /* Detail Styles */
+  .rating { 
+    color: #ff385c; 
+    font-weight: 700; 
+  }
+  .bi {
+    margin-right: 10px;
+    font-size: 1.1rem;
+  }
+
+  /* Sticky Price/Action Box */
+  .price-box { 
+    border: 1px solid #ddd; 
+    border-radius: 12px; 
+    padding: 24px; 
+    position: sticky; 
+    top: 100px; 
+    background: #fff; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Button Styles */
+  .btn-action {
+    transition: all 0.2s ease-in-out;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+
+  /* Confirmation Modal Styles */
+  .confirm-message {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: white; padding: 30px; border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); z-index: 1050;
+    text-align: center; visibility: hidden; opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  .confirm-message.show { visibility: visible; opacity: 1; }
+
+  .overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); z-index: 1040;
+    visibility: hidden; opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  .overlay.show { visibility: visible; opacity: 1; }
+
+
+
+.price-box {
+  position: sticky;
+  top: 20px; /* distance from top while sticky */
+}
+
+/* Stop sticky after the map wrapper */
+.map-wrapper {
+  position: relative;
+}
+
+/* Optional: if using JS to stop sticky after map */
+
+.btn-light.rounded-circle {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  padding: 0;
+}
+
+.btn-light.rounded-circle:hover {
+  background-color: #f0f0f0;
+  color: #007bff;
+}
+
+
+
+  
+
+
+  
+
+</style>

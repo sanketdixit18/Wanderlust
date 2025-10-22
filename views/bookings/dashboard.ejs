@@ -1,0 +1,440 @@
+<!-- 
+<h2>My Bookings</h2>
+
+<% if (bookings.length === 0) { %>
+  <p>You have no bookings yet.</p>
+<% } else { %>
+  <div class="list-group">
+    <% bookings.forEach(booking => { %>
+      <div class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <h5><a href="/listings/<%= booking.listing._id %>"><%= booking.listing.title %></a></h5>
+          <p>
+            <strong>Check-In:</strong> <%= new Date(booking.checkIn).toLocaleDateString() %> | 
+            <strong>Check-Out:</strong> <%= new Date(booking.checkOut).toLocaleDateString() %> |
+            <strong>Guests:</strong> <%= booking.guests %>
+          </p>
+        </div>
+        <form action="/listings/<%= booking.listing._id %>/bookings/<%= booking._id %>?_method=DELETE" method="POST">
+          <button class="btn btn-outline-danger btn-sm">Cancel</button>
+        </form>
+      </div>
+    <% }) %>
+  </div>
+<% } %> -->
+<% layout('layouts/boilerplate') %>
+<script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font import for a cleaner look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc; /* Light background */
+        }
+        /* Style for LLM content list items */
+        #llm-modal-content ul {
+            list-style: disc;
+            margin-left: 1.5rem;
+            padding-left: 0;
+        }
+        #llm-modal-content li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+    <!-- Firebase Imports for real-world functionality -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, onSnapshot, query, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase variables (MANDATORY for Canvas environment)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let app, db, auth;
+        let userId = 'loading'; // Will be updated on auth change
+
+        // Function to initialize Firebase
+        const initFirebase = async () => {
+            if (!firebaseConfig) {
+                console.error("Firebase config not found. Running in mock data mode.");
+                return;
+            }
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('debug'); // Enable Firestore logging
+
+                // 1. Authenticate the user
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // 2. Listen for auth state changes
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Authenticated User ID:", userId);
+                        // In a real app, you would start listening to Firestore here
+                    } else {
+                        userId = crypto.randomUUID(); // Anonymous ID
+                        console.log("Signed in anonymously. Generated ID:", userId);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+            }
+        };
+
+        // Initialize on window load
+        window.onload = initFirebase;
+    </script>
+</head>
+<body class="min-h-screen">
+
+    <!-- Mock Data for EJS: In a real environment, the server renders this array -->
+    <script>
+        // NOTE: In a real Express/EJS app, this array would be passed directly 
+        // to the render function, e.g., res.render('my_bookings', { bookings: mockBookings }).
+        // We define it here so the EJS tags have access to it for demonstration.
+        const mockBookings = [
+            {
+                _id: 'b101',
+                listing: { _id: 'l201', title: 'Luxury Mountain Cabin Getaway' },
+                checkIn: new Date('2025-11-15T00:00:00'),
+                checkOut: new Date('2025-11-20T00:00:00'),
+                guests: 4
+            },
+            {
+                _id: 'b102',
+                listing: { _id: 'l202', title: 'Urban Loft near Downtown' },
+                checkIn: new Date('2025-12-01T00:00:00'),
+                checkOut: new Date('2025-12-05T00:00:00'),
+                guests: 2
+            },
+            {
+                _id: 'b103',
+                listing: { _id: 'l203', title: 'Beachfront Villa with Pool' },
+                checkIn: new Date('2026-03-10T00:00:00'),
+                checkOut: new Date('2026-03-17T00:00:00'),
+                guests: 6
+            },
+            // Test case for past booking
+            {
+                _id: 'b104',
+                listing: { _id: 'l204', title: 'Cozy City Apartment' },
+                checkIn: new Date('2024-01-05T00:00:00'),
+                checkOut: new Date('2024-01-10T00:00:00'),
+                guests: 1
+            }
+        ];
+        
+        // Removed client-side definition of formatDate.
+        const bookings = mockBookings; // Make it accessible by the EJS template
+    </script>
+
+    <!-- Main Container -->
+    <div id="app-container" class="container mx-auto p-4 sm:p-8 lg:p-12 max-w-4xl">
+        <header class="mb-8 border-b pb-4">
+            <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight">My Bookings</h1>
+            <p id="auth-status" class="text-sm text-gray-500 mt-1"></p>
+        </header>
+
+        <!-- Bookings List - RENDERED BY EJS -->
+        <div id="bookings-list">
+            <% if (bookings.length === 0) { %>
+                <div class="p-6 text-center text-gray-600 bg-white rounded-xl shadow-lg border border-gray-100">
+                    <svg class="w-12 h-12 mx-auto text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <p class="mt-3 text-lg font-semibold">No bookings yet.</p>
+                    <p class="mt-1 text-sm text-gray-500">Find your next adventure and book a stay!</p>
+                </div>
+            <% } else { %>
+                <div class="space-y-6">
+                    <% 
+                        // Define formatDate here to ensure it is available in the EJS server-side rendering context
+                        const formatDate = (date) => new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    %>
+                    <% bookings.forEach(booking => { %>
+                        <% 
+                            // EJS logic to calculate values based on server data
+                            const checkInDate = new Date(booking.checkIn);
+                            const checkOutDate = new Date(booking.checkOut);
+                            const isPast = checkOutDate < new Date();
+                            const statusClasses = isPast 
+                                ? 'border-red-300 bg-red-50 opacity-60' 
+                                : 'border-indigo-200 bg-white hover:shadow-xl transition duration-300';
+                        %>
+                        <div class="p-5 rounded-xl shadow-lg border-l-4 flex flex-col <%= statusClasses %>">
+
+                            <!-- --- Top Row (Content + Cancel Button) --- -->
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                                
+                                <!-- Content Div -->
+                                <div class="mb-4 md:mb-0">
+                                    <a href="/listings/<%= booking.listing._id %>" class="text-xl font-bold text-gray-800 hover:text-indigo-600 transition duration-150">
+                                        <%= booking.listing.title %>
+                                    </a>
+                                    <p class="text-sm text-gray-600 mt-1 flex flex-wrap gap-x-4">
+                                        <span class="font-medium text-indigo-700">Check-In:</span> <%= formatDate(checkInDate) %>
+                                        <span class="hidden sm:inline-block text-gray-400">|</span>
+                                        <span class="font-medium text-indigo-700">Check-Out:</span> <%= formatDate(checkOutDate) %>
+                                        <span class="hidden sm:inline-block text-gray-400">|</span>
+                                        <span class="font-medium text-indigo-700">Guests:</span> <%= booking.guests %>
+                                    </p>
+                                </div>
+
+                                <!-- Action Form (Cancel Button) -->
+                                 
+                                <form action="/listings/<%= booking.listing._id %>/bookings/<%= booking._id %>?_method=DELETE" method="POST" class="self-end md:self-auto">
+                                    <% if (isPast) { %>
+                                        <button type="button" disabled class="px-4 py-2 text-sm font-semibold rounded-full border border-gray-400 text-gray-500 cursor-not-allowed bg-gray-100">
+                                            Stay Complete
+                                        </button>
+                                    <% } else { %>
+                                        <button type="submit" class="px-4 py-2 text-sm font-semibold rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-150 shadow-md">
+                                            Cancel Booking
+                                        </button>
+                                    <% } %>
+                                </form>
+
+                            </div>
+
+                            <!-- --- LLM Feature Row --- -->
+                            <% if (!isPast) { %>
+                                <div class="flex flex-col sm:flex-row gap-2 mt-2 pt-3 border-t border-gray-100">
+                                    <!-- Packing List Button - Passes the full booking object to client-side JS -->
+                                    <button type="button" onclick="generatePackingList(<%= JSON.stringify(booking) %>)" class="flex-1 w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition duration-150 shadow-sm">
+                                        ✨ Packing List
+                                    </button>
+                                    <!-- Local Insights Button - Passes the full booking object to client-side JS -->
+                                    <button type="button" onclick="generateLocalInsights(<%= JSON.stringify(booking) %>)" class="flex-1 w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition duration-150 shadow-sm">
+                                        ✨ Local Insights
+                                    </button>
+                                </div>
+                            <% } %>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- LLM Response Modal -->
+    <div id="llm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 transition-opacity duration-300 hidden">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xl transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 id="llm-modal-title" class="text-xl font-bold text-gray-800">AI Response</h3>
+                <button onclick="document.getElementById('llm-modal').classList.add('hidden');" class="text-gray-500 hover:text-gray-800">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="llm-modal-content" class="text-gray-700 max-h-96 overflow-y-auto">
+                <!-- Content and loading indicator goes here -->
+            </div>
+            <p id="llm-loading-indicator" class="text-center text-indigo-500 mt-4 hidden">
+                <svg class="animate-spin h-5 w-5 mr-3 inline text-indigo-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Generating insights...
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Helper functions remain client-side as they manage browser UI and API calls
+
+        // --- GEMINI API HELPERS ---
+        const modal = document.getElementById('llm-modal');
+        const modalTitle = document.getElementById('llm-modal-title');
+        const modalContent = document.getElementById('llm-modal-content');
+        const loadingIndicator = document.getElementById('llm-loading-indicator');
+
+        const setModalContent = (htmlContent) => {
+            modalContent.innerHTML = htmlContent;
+            modal.classList.remove('hidden');
+        };
+
+        const setLoadingState = (isLoading) => {
+            if (isLoading) {
+                loadingIndicator.classList.remove('hidden');
+                modalContent.innerHTML = '';
+                modal.classList.remove('hidden');
+            } else {
+                loadingIndicator.classList.add('hidden');
+            }
+        };
+
+        /**
+         * Generic function to call the Gemini API with exponential backoff and search grounding.
+         */
+        async function callGeminiApi(userQuery, systemPrompt, useSearch) {
+            setLoadingState(true);
+
+            const apiKey = ""; // Canvas environment provides this if needed
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                // Conditionally include grounding tool (Google Search)
+                ...(useSearch && { tools: [{ "google_search": {} }] }),
+            };
+
+            let response = null;
+            const maxRetries = 3;
+            let delay = 1000;
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        break;
+                    } else if (response.status === 429 && i < maxRetries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // Exponential backoff
+                    } else {
+                        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error("Fetch attempt failed:", error);
+                    if (i === maxRetries - 1) {
+                        setLoadingState(false);
+                        setModalContent("Error: Failed to connect to the AI service.");
+                        return;
+                    }
+                }
+            }
+
+            if (!response || !response.ok) {
+                setLoadingState(false);
+                setModalContent("Error: API request failed after all retries.");
+                return;
+            }
+
+            try {
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    let generatedText = candidate.content.parts[0].text;
+                    let sources = [];
+                    const groundingMetadata = candidate.groundingMetadata;
+
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attribution => ({
+                                uri: attribution.web?.uri,
+                                title: attribution.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title);
+                    }
+
+                    // Simple Markdown list conversion to HTML for display
+                    let htmlContent = generatedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    htmlContent = htmlContent.replace(/\n\*/g, '</li><li>');
+                    htmlContent = htmlContent.replace(/^- /g, '</li><li>');
+                    htmlContent = htmlContent.replace(/<br\/><li>/g, '<li>'); // Clean up repeated tags
+                    // Wrap in <ul> tags
+                    if (htmlContent.includes('<li>')) {
+                        htmlContent = '<ul>' + htmlContent.replace('</li>', '') + '</ul>';
+                    } else {
+                        // Handle plain text/paragraph structure
+                        htmlContent = htmlContent.replace(/\n\n/g, '<br/><br/>');
+                        htmlContent = htmlContent.replace(/\n/g, '<br/>');
+                    }
+
+
+                    // Append citations
+                    if (sources.length > 0) {
+                        htmlContent += '<br/><br/><p class="text-xs text-gray-500 font-semibold border-t pt-2 mt-4">Sources Grounding:</p>';
+                        const uniqueSources = Array.from(new Set(sources.map(s => s.uri)))
+                            .map(uri => sources.find(s => s.uri === uri));
+
+                        uniqueSources.forEach((source, index) => {
+                            htmlContent += `<p class="text-xs text-gray-500 mt-1"> ${index + 1}. <a href="${source.uri}" target="_blank" class="text-indigo-500 hover:underline">${source.title || source.uri}</a></p>`;
+                        });
+                    }
+
+                    setModalContent(htmlContent);
+                } else {
+                    setModalContent("The AI did not return content. Try a different request.");
+                }
+            } catch (error) {
+                console.error("Error processing Gemini response:", error);
+                setModalContent("An error occurred while processing the response data.");
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        // --- LLM Feature Functions ---
+
+        async function generatePackingList(booking) {
+            modalTitle.textContent = `✨ Personalized Packing List`;
+
+            const checkInDate = new Date(booking.checkIn);
+            const checkOutDate = new Date(booking.checkOut);
+            
+            const month = checkInDate.toLocaleString('en-US', { month: 'long' });
+            // Calculate duration in days
+            const durationDays = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+
+            const userQuery = `Generate a comprehensive packing list for a trip to "${booking.listing.title}". The trip is ${durationDays} days long and takes place in ${month}. Consider the type of destination (e.g., mountain, beach, city) implied by the title. Organize the list into categories (e.g., Clothing, Essentials, Gear).`;
+            
+            const systemPrompt = "You are a helpful travel assistant. Generate a concise, bulleted packing list based on the provided travel details. Use markdown bullet points (*). Do not include a conversational introduction, only the list. Put category names in bold.";
+            
+            await callGeminiApi(userQuery, systemPrompt, true); // Use search for better context
+        }
+
+        async function generateLocalInsights(booking) {
+            modalTitle.textContent = `✨ Local Insights for: ${booking.listing.title}`;
+
+            const checkInDate = new Date(booking.checkIn);
+            const month = checkInDate.toLocaleString('en-US', { month: 'long' });
+
+            const userQuery = `Suggest 3 unique, highly-rated activities, dining options, or local tips for a stay at a place called "${booking.listing.title}" during the month of ${month}. Focus on what locals would recommend.`;
+            
+            const systemPrompt = "You are an expert local guide. Provide three specific, high-quality suggestions for activities or tips related to the given travel destination/listing title. Format each suggestion with a bold title followed by a brief description. Use Google Search to find relevant and up-to-date information.";
+
+            await callGeminiApi(userQuery, systemPrompt, true); // Use search for grounding
+        }
+
+
+        // Custom Modal/Alert box instead of window.alert()
+        function alertBox(message) {
+            const modalId = 'custom-alert-modal';
+            let modal = document.getElementById(modalId);
+            
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = modalId;
+                modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 hidden';
+                modal.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-2xl w-full max-w-sm transform scale-95 transition-transform duration-300">
+                        <h3 class="text-lg font-bold text-gray-800 border-b pb-2 mb-3">Action Recorded</h3>
+                        <p class="text-gray-600 mb-4" id="alert-message"></p>
+                        <button id="alert-close-btn" class="w-full bg-indigo-500 text-white py-2 rounded-lg font-semibold hover:bg-indigo-600 transition">
+                            OK
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                document.getElementById('alert-close-btn').onclick = () => {
+                    modal.classList.add('hidden');
+                };
+            }
+
+            document.getElementById('alert-message').textContent = message;
+            modal.classList.remove('hidden');
+        }
+    </script>
