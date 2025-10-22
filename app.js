@@ -317,7 +317,19 @@ app.use("/listings/:id/reviews", reviewsRoutes);
 // ====== LISTING ROUTES ======
 
 // Home
-app.get("/", (req, res) => res.send("Hello from server!"));
+// app.get("/", (req, res) => res.send("Hello from server!"));
+// Home route
+app.get("/", async (req, res) => {
+  try {
+    // If you want to pass listings data to the template
+    const allListings = await Listing.find({}); // assuming you have a Listing model
+    res.render("listings/index", { allListings });
+  } catch (err) {
+    console.error(err);
+    res.send("Error loading listings");
+  }
+});
+
 
 // INDEX
 app.get("/listings", async (req, res) => {
