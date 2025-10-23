@@ -108,3 +108,26 @@ window.addEventListener("scroll", () => {
   }, 5000); // 5000 ms = 5 seconds
 
 
+
+
+  //for map
+
+  function initMap() {
+    const listingLat = <%= listing.latitude || 28.6139 %>; // fallback latitude
+    const listingLng = <%= listing.longitude || 77.2090 %>; // fallback longitude
+
+    const map = new google.maps.Map(document.getElementById("map"), {
+      center: { lat: listingLat, lng: listingLng },
+      zoom: 14,
+    });
+
+    const marker = new google.maps.Marker({
+      position: { lat: listingLat, lng: listingLng },
+      map: map,
+      title: "<%= listing.title %>",
+    });
+  }
+
+
+
+

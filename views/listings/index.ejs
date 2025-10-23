@@ -3,6 +3,7 @@
 
 <% layout('layouts/boilerplate') %>
 
+
 <h3 class="mb-4">All Listings</h3>
 
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
@@ -15,12 +16,12 @@
           <!-- Guest favourite badge -->
           <!-- <span class="position-absolute top-0 start-0 m-2 badge bg-light text-dark">Guest favourite</span> -->
            <!-- Interactive Heart Icon Container (The Circle) -->
-          <div class="favorite-toggle" 
-            data-listing-id="<%= listing._id %>" 
-            onclick="toggleFavorite(this, event)">
+          <!-- <div class="favorite-toggle"  -->
+            <!-- data-listing-id="<%= listing._id %>"  -->
+            <!-- onclick="toggleFavorite(this, event)"> -->
               <!-- The Icon itself -->
-              <i class="bi bi-heart favorite-icon"></i>
-          </div>
+              <!-- <i class="bi bi-heart favorite-icon"></i> -->
+          <!-- </div> -->
           
           <!-- Listing image -->
           <img src="<%= listing.image.url %>" class="card-img-top" alt="<%= listing.title %>" style="height: 200px; object-fit: cover;">

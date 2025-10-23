@@ -229,6 +229,29 @@ const ejsMate = require("ejs-mate");
 const multer = require("multer");
 
 
+require("dotenv").config();
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+
+// ✅ Cloudinary Configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET,
+});
+
+// ✅ Cloudinary Storage Setup for Multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "Wanderlust_Listings",
+    allowed_formats: ["jpeg", "png", "jpg"],
+  },
+});
+
+const upload = multer({ storage });
+
+
 const Listing = require("./models/listing");
 const reviewsRoutes = require("./routes/reviews");
 const authRoutes = require("./routes/auth");
@@ -300,16 +323,16 @@ app.use("/listings", bookingRoutes); // Mount under listings
 
 // const storage = multer.memoryStorage();
 // const upload = multer({ storage });
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "public/uploads");
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName);
-  }
-});
-const upload = multer({ storage });
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, "public/uploads");
+//   },
+//   filename: (req, file, cb) => {
+//     const uniqueName = Date.now() + "-" + file.originalname;
+//     cb(null, uniqueName);
+//   }
+// });
+// const upload = multer({ storage });
 
 // Mount review routes
 app.use("/listings/:id/reviews", reviewsRoutes);
@@ -355,29 +378,6 @@ app.get("/listings/new", isLoggedIn, (req, res) => {
   res.render("listings/new");
 });
 
-// CREATE - create a new listing (only for logged-in users)
-// app.post("/listings", isLoggedIn, upload.single("image"), async (req, res) => {
-//   const { title, description, price, location, country, imageURL } = req.body;
-
-//   const finalImage = imageURL && imageURL.trim() !== "" 
-//     ? imageURL 
-//     : "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=600&auto=format&fit=crop&q=60";
-
-//   const newListing = new Listing({
-//     title,
-//     description,
-//     price,
-//     location,
-//     country,
-//     image: { url: finalImage, filename: "placeholder" },
-//     author: req.user._id // <-- ADD THIS
-//   });
-
-//   await newListing.save();
-//   req.flash("success", "Listing added successfully!");
-//   res.redirect("/listings");
-// });
-
 
 
 // app.post("/listings", isLoggedIn, upload.single("image"), async (req, res) => {
@@ -386,20 +386,19 @@ app.get("/listings/new", isLoggedIn, (req, res) => {
 //   let finalImage;
 
 //   if (req.file) {
-//     // If user uploaded an image file
+//     // Image uploaded via Cloudinary
 //     finalImage = {
-//       url: `/uploads/${req.file.filename}`,
-//       //url: req.file.path,        // multer + Cloudinary gives path or location
-//       filename: req.file.filename
+//       url: req.file.path,        // Cloudinary returns a URL
+//       filename: req.file.filename // Cloudinary public_id
 //     };
 //   } else if (imageURL && imageURL.trim() !== "") {
-//     // If user provided image link manually
+//     // Manual image URL
 //     finalImage = {
 //       url: imageURL,
 //       filename: "manual-upload"
 //     };
 //   } else {
-//     // Default placeholder image
+//     // Default placeholder
 //     finalImage = {
 //       url: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=600&auto=format&fit=crop&q=60",
 //       filename: "placeholder"
@@ -422,44 +421,49 @@ app.get("/listings/new", isLoggedIn, (req, res) => {
 // });
 
 app.post("/listings", isLoggedIn, upload.single("image"), async (req, res) => {
-  const { title, description, price, location, country, imageURL } = req.body;
+  try {
+    const { title, description, price, location, country, imageURL } = req.body;
 
-  let finalImage;
+    let finalImage;
 
-  if (req.file) {
-    // If user uploaded an image file (stored locally)
-    finalImage = {
-      url: `/uploads/${req.file.filename}`, // serve from public/uploads
-      filename: req.file.filename
-    };
-  } else if (imageURL && imageURL.trim() !== "") {
-    // If user provided image link manually
-    finalImage = {
-      url: imageURL,
-      filename: "manual-upload"
-    };
-  } else {
-    // Default placeholder image
-    finalImage = {
-      url: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=600&auto=format&fit=crop&q=60",
-      filename: "placeholder"
-    };
+    if (req.file) {
+      // Multer + CloudinaryStorage automatically uploaded the image
+      finalImage = {
+        url: req.file.path,       // full Cloudinary URL
+        filename: req.file.filename // Cloudinary public_id
+      };
+    } else if (imageURL && imageURL.trim() !== "") {
+      finalImage = {
+        url: imageURL,
+        filename: "manual-upload"
+      };
+    } else {
+      finalImage = {
+        url: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=600&auto=format&fit=crop&q=60",
+        filename: "placeholder"
+      };
+    }
+
+    const newListing = new Listing({
+      title,
+      description,
+      price,
+      location,
+      country,
+      image: finalImage,
+      author: req.user._id
+    });
+
+    await newListing.save();
+    req.flash("success", "Listing added successfully!");
+    res.redirect("/listings");
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Something went wrong!");
+    res.redirect("/listings/new");
   }
-
-  const newListing = new Listing({
-    title,
-    description,
-    price,
-    location,
-    country,
-    image: finalImage,
-    author: req.user._id
-  });
-
-  await newListing.save();
-  req.flash("success", "Listing added successfully!");
-  res.redirect("/listings");
 });
+
 
 
 
@@ -496,48 +500,90 @@ app.get("/listings/:id/edit", isLoggedIn, isAuthor, async (req, res) => {
   res.render("listings/edit", { listing });
 });
 
-// UPDATE
+
+
 // app.put("/listings/:id", isLoggedIn, isAuthor, upload.single("image"), async (req, res) => {
 //   const { id } = req.params;
-//   const updateData = req.body;
-//   await Listing.findByIdAndUpdate(id, updateData);
+//   const { title, description, price, location, country, imageURL } = req.body;
+
+//   const listing = await Listing.findById(id);
+
+//   if (!listing) {
+//     req.flash("error", "Listing not found!");
+//     return res.redirect("/listings");
+//   }
+
+//   // Update regular fields
+//   listing.title = title;
+//   listing.description = description;
+//   listing.price = price;
+//   listing.location = location;
+//   listing.country = country;
+
+//   // ✅ Handle image update logic
+//   if (req.file) {
+//     // If a new image was uploaded via form
+//     listing.image = {
+//       url: req.file.path,       // Cloudinary auto provides the full URL
+//       filename: req.file.filename
+//     };
+//   } else if (imageURL && imageURL.trim() !== "") {
+//     // If user entered a new image URL manually
+//     listing.image = {
+//       url: imageURL,
+//       filename: "manual-upload"
+//     };
+//   }
+
+//   await listing.save();
+
 //   req.flash("success", "Listing updated successfully!");
 //   res.redirect(`/listings/${id}`);
 // });
+
 app.put("/listings/:id", isLoggedIn, isAuthor, upload.single("image"), async (req, res) => {
-  const { id } = req.params;
-  const { title, description, price, location, country, imageURL } = req.body;
+  try {
+    const { id } = req.params;
+    const { title, description, price, location, country, imageURL } = req.body;
 
-  const listing = await Listing.findById(id);
+    const listing = await Listing.findById(id);
+    if (!listing) {
+      req.flash("error", "Listing not found!");
+      return res.redirect("/listings");
+    }
 
-  // Update normal fields
-  listing.title = title;
-  listing.description = description;
-  listing.price = price;
-  listing.location = location;
-  listing.country = country;
+    // Update fields
+    listing.title = title;
+    listing.description = description;
+    listing.price = price;
+    listing.location = location;
+    listing.country = country;
 
-  // Handle image logic
-  if (req.file) {
-    // If a new image file is uploaded
-    listing.image = {
-      url: `/uploads/${req.file.filename}`,
-      filename: req.file.filename
-    };
-  } else if (imageURL && imageURL.trim() !== "") {
-    // If user entered a new image URL manually
-    listing.image = {
-      url: imageURL,
-      filename: "manual-upload"
-    };
+    // Update image if uploaded
+    if (req.file) {
+      listing.image = {
+        url: req.file.path,
+        filename: req.file.filename
+      };
+    } else if (imageURL && imageURL.trim() !== "") {
+      listing.image = {
+        url: imageURL,
+        filename: "manual-upload"
+      };
+    }
+    // else keep old image
+
+    await listing.save();
+    req.flash("success", "Listing updated successfully!");
+    res.redirect(`/listings/${id}`);
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Something went wrong!");
+    res.redirect("/listings");
   }
-  // If neither uploaded nor provided, keep old image
-
-  await listing.save();
-
-  req.flash("success", "Listing updated successfully!");
-  res.redirect(`/listings/${id}`);
 });
+
+
 
 
 // DELETE

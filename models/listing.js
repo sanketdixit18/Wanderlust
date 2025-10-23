@@ -57,6 +57,11 @@ const listingSchema = new Schema(
       type: String,
       required: [true, "Country is required"],
     },
+    
+    amenities: {
+      type: [String], // e.g., ["wifi", "parking", "tv"]
+      default: [],
+    },
     // ✅ One listing can have many reviews
     reviews: [
     {
