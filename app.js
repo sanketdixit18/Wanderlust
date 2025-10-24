@@ -229,6 +229,7 @@ const ejsMate = require("ejs-mate");
 const multer = require("multer");
 
 
+
 require("dotenv").config();
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
@@ -256,6 +257,7 @@ const Listing = require("./models/listing");
 const reviewsRoutes = require("./routes/reviews");
 const authRoutes = require("./routes/auth");
 const bookingRoutes = require("./routes/bookings");
+
 
 // ✅ Import middleware here
 const { isLoggedIn, isAuthor } = require("./middleware");
@@ -593,5 +595,8 @@ app.delete("/listings/:id", isLoggedIn, isAuthor, async (req, res) => {
   res.redirect("/listings");
 });
 
+// // ====== SERVER ======
+// app.listen(8080, () => console.log("🚀 Server listening on port 8080"));
 // ====== SERVER ======
-app.listen(8080, () => console.log("🚀 Server listening on port 8080"));
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
