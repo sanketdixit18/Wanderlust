@@ -347,6 +347,28 @@ const sampleListings = [
     location: "Costa Rica",
     country: "Costa Rica",
   },
+  {
+    "name": "Paris",
+    "description": "The city of love, lights, and culture.",
+    "tips": [
+      { "title": "Eiffel Tower Visit", "details": "Go early to avoid queues.", "icon": "🗼", "category": "Sightseeing" },
+      { "title": "Try Croissants", "details": "Best at local bakeries.", "icon": "🥐", "category": "Food" },
+      { "title": "River Seine Cruise", "details": "Evening cruises are magical.", "icon": "🚤", "category": "Activity" }
+    ],
+    "transport": [
+      { "type": "Metro", "details": "Easy and cheap to get around." },
+      { "type": "Taxi", "details": "Useful for night trips." }
+    ],
+    "emergencyNumber": "112",
+    "hospitalName": "Paris General Hospital",
+    "hospitalAddress": "123 Rue de Paris",
+    "property": {
+      "title": "Charming Paris Apartment",
+      "link": "/listings/paris-apartment",
+      "bookingLink": "/bookings/paris-apartment",
+      "hostPhone": "+33 1 23 45 67 89"
+    }
+  }
   
 ];
 
