@@ -266,9 +266,20 @@ const { isLoggedIn, isAuthor } = require("./middleware");
 const app = express();
 
 // ====== DATABASE ======
-mongoose.connect("mongodb://127.0.0.1:27017/Wanderlust")
+const dbUrl=process.env.ATLASDB_URL;
+
+// mongoose.connect("mongodb://127.0.0.1:27017/Wanderlust")
+// mongoose.connect(dbUrl)
+//   .then(() => console.log("✅ MongoDB Connected"))
+//   .catch(err => console.error(err));
+mongoose.connect(dbUrl, {
+  serverSelectionTimeoutMS: 10000,
+  tls: true,
+  tlsAllowInvalidCertificates: false,
+})
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch(err => console.error(err));
+  .catch(err => console.error("❌ MongoDB connection error:", err));
+
 
 // ====== MIDDLEWARE ======
 app.engine("ejs", ejsMate);
